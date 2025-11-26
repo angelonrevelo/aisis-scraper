@@ -2,6 +2,16 @@ name: AISIS Schedule Scrape
 
 on:
   workflow_dispatch:
+    inputs:
+      scrape_mode:
+        description: 'Scrape mode'
+        required: false
+        default: 'current'
+        type: choice
+        options:
+          - current
+          - future
+          - all
   schedule:
     - cron: '0 */6 * * *'
 
@@ -40,6 +50,9 @@ jobs:
           DATA_INGEST_TOKEN: ${{ secrets.DATA_INGEST_TOKEN }}
           GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          # Scrape mode: 'current' (default), 'future', or 'all'
+          # Uses workflow input if provided, otherwise defaults to 'current'
+          AISIS_SCRAPE_MODE: ${{ github.event.inputs.scrape_mode || 'current' }}
           # Optional: Override term to skip auto-detection (speeds up startup)
           # AISIS_TERM: '2025-1'
           # Optional: Performance tuning (default: 2000)
