@@ -1,0 +1,79 @@
+name: AISIS – Class Schedule (Full Academic Year)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_year:
+        description: 'Target academic year (e.g., 2025)'
+        required: false
+        type: string
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Determine target year
+        id: year
+        run: |
+          if [ -n "${{ github.event.inputs.target_year }}" ]; then
+            echo "TARGET_YEAR=${{ github.event.inputs.target_year }}" >> $GITHUB_ENV
+            echo "Using input year: ${{ github.event.inputs.target_year }}"
+          else
+            CURRENT_YEAR=$(date +%Y)
+            echo "TARGET_YEAR=$CURRENT_YEAR" >> $GITHUB_ENV
+            echo "Using current year: $CURRENT_YEAR"
+          fi
+
+      - name: Download previous baselines
+        # Downloads baseline-{term}.json files from previous runs for comparison
+        uses: actions/download-artifact@v4
+        with:
+          name: baselines
+          path: logs/baselines/
+        continue-on-error: true  # Don't fail if no previous baseline exists
+
+      - name: Run full year schedule scraper
+        env:
+          AISIS_USERNAME: ${{ secrets.AISIS_USERNAME }}
+          AISIS_PASSWORD: ${{ secrets.AISIS_PASSWORD }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          DATA_INGEST_TOKEN: ${{ secrets.DATA_INGEST_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          TARGET_YEAR: ${{ env.TARGET_YEAR }}
+          # Optional: Performance tuning (default: 2000)
+          # SUPABASE_CLIENT_BATCH_SIZE: '2000'
+        run: node src/scrape-full-year.js
+      
+      - name: Upload baselines for next run
+        # Saves baseline-{term}.json files for comparison in future runs
+        uses: actions/upload-artifact@v4
+        if: always()  # Upload even if scraper fails
+        with:
+          name: baselines
+          path: logs/baselines/
+          retention-days: 90  # Keep baselines for 90 days
+
+      - name: Upload schedule logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: schedule-logs-${{ env.TARGET_YEAR }}
+          path: |
+            logs/schedule-all-terms-*.json
+            data/schedules-full-year-*.json
+          retention-days: 30
