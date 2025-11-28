@@ -1,4 +1,4 @@
-name: AISIS Schedule Scrape
+name: AISIS – Class Schedule (Current Term)
 
 on:
   workflow_dispatch:
