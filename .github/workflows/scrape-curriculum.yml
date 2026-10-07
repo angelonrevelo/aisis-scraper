@@ -2,8 +2,7 @@ name: AISIS – Degree Curricula (All Programs)
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * 0'  # Runs weekly on Sundays at midnight UTC
+  # schedule removed 2026-10-07 — GitHub Actions must not run scrapers
 
 jobs:
   scrape:

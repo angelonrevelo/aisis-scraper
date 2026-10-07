@@ -27,8 +27,7 @@ on:
         options:
           - 'true'
           - 'false'
-  schedule:
-    - cron: '0 */6 * * *'
+  # schedule removed 2026-10-07 — GitHub Actions must not run scrapers
 
 jobs:
   scrape:

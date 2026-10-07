@@ -28,9 +28,7 @@ on:
         options:
           - 'true'
           - 'false'
-  schedule:
-    # Run weekly on Sundays at 2 AM UTC
-    - cron: '0 2 * * 0'
+  # schedule removed 2026-10-07 — GitHub Actions must not run scrapers
 
 jobs:
   scrape:
